@@ -17,7 +17,7 @@ class Classroom:
         room_map=None,
         grid_size=(30, 30), 
         seed=1, 
-        diffusion_coefficient=1.5, 
+        diffusion_coefficient=0.7, 
         airing_efficiency=0.2,
         airing_duration=10
     ):
@@ -158,7 +158,7 @@ class Pupil:
 
 # initialize simulations
 t = datetime(year=2024, month=5, day=15, hour=7)
-dt = timedelta(minutes=10)
+dt = timedelta(minutes=20)
 t_end = t + timedelta(weeks=4)
 
 classroom_map = pd.read_excel("data/classroom.xlsx", sheet_name="U-shape", 
@@ -188,16 +188,15 @@ fig.colorbar(cax)
 ax.set_title("Virus Concentration")
 
 
-while t < t_end:
+while room.time < t_end:
     room.step(dt=dt)
 
     for pupil in pupils:
         pupil.step(classroom=room, dt=dt)
 
-    if t.time().minute == 0:
-        cax.set_data(room.concentration)
-        ax.set_title(f"Time Step: {room.time}")
-        plt.pause(0.001)
+    cax.set_data(room.concentration)
+    ax.set_title(f"Time Step: {room.time}")
+    plt.pause(0.001)
 
 plt.ioff()
 plt.show()
