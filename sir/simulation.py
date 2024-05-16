@@ -32,6 +32,8 @@ class Classroom:
 
         # Controls the rate of spreading
         self.diffusion_coefficient = diffusion_coefficient  
+        self.decay_rate_constant = 0.05
+
         self.airing_efficiency = airing_efficiency
         self.airing_duration = airing_duration
         # Initialize the concentration grid
@@ -43,13 +45,14 @@ class Classroom:
             for j in range(1, self.grid_size[1]-1):
                 # Apply the diffusion equation (discrete Laplacian)
                 new_concentration[i, j] = (
-                    self.concentration[i, j] + 
-                    self.diffusion_coefficient * (
-                        self.concentration[i+1, j] + 
-                        self.concentration[i-1, j] +
-                        self.concentration[i, j+1] + 
-                        self.concentration[i, j-1] - 
-                        4 * self.concentration[i, j]
+                    self.concentration[i, j] + (
+                        self.diffusion_coefficient * (
+                            self.concentration[i+1, j] + 
+                            self.concentration[i-1, j] +
+                            self.concentration[i, j+1] + 
+                            self.concentration[i, j-1] - 
+                            4 * self.concentration[i, j]
+                        ) - self.concentration[i, j] * self.decay_rate_constant
                     ) * dt / self.time_unit
                 )
         self.concentration = new_concentration
@@ -80,11 +83,11 @@ class Pupil:
         # parameters
         self.sick_threshold = None
         self.emission_rate_constant = emission_rate
-        self.viral_growth_rate_constant = 0.01
-        self.antibody_growth_rate_constant = 0.02
-        self.antibody_decay_rate_constant = 0.002
-        self.viral_decay_rate_constant = 0.001
+        self.viral_growth_rate_constant = 0.1
+        self.antibody_growth_rate_constant = 0.0002
+        self.antibody_decay_rate_constant = 0.00002
         self.viral_uptake_rate_constant = 0.1
+        self.immune_defense_rate_constant = 0.01
 
         # state variables (zustandsvariablen)
         self.is_in_classroom = False
@@ -120,9 +123,9 @@ class Pupil:
             Cv_env = 0.0
         
         Cv_dt = (
-            self.virus_concentration * self.viral_growth_rate_constant -
-            self.virus_concentration * self.viral_decay_rate_constant +
-            Cv_env * self.viral_uptake_rate_constant
+            self.virus_concentration * self.viral_growth_rate_constant +
+            Cv_env * self.viral_uptake_rate_constant -
+            self.virus_concentration * self.antibody_concentration * self.immune_defense_rate_constant
         )
 
         Ca_dt = (
