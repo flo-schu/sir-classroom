@@ -1,27 +1,46 @@
+from datetime import datetime, timedelta, time
+
 import numpy as np
-import datetime as dt
+import pandas as pd
 from matplotlib import pyplot as plt
+
+from boxes import find_clusters, draw_boxes
 
 class Classroom:
     table_assignment = {}
     pupils = []
+    time: datetime = datetime(year=2024, month=1, day=1, hour=0, minute=0)
+    time_unit = timedelta(hours=1)
 
-    def __init__(self, seed=1, grid_size=30, diffusion_coefficient=0.2, 
-                 airing_efficiency=0.2,
-                 airing_duration=10):
+    def __init__(
+        self, 
+        room_map=None,
+        grid_size=(30, 30), 
+        seed=1, 
+        diffusion_coefficient=1.5, 
+        airing_efficiency=0.2,
+        airing_duration=10
+    ):
         self.rng = np.random.default_rng(seed)
-        self.grid_size = grid_size
+        if room_map is None:
+            self.grid_size = grid_size
+
+        else:
+            self.table_assignment = classroom_map.values
+            self.grid_size = classroom_map.values.shape
+            self.table_boxes = find_clusters(self.table_assignment)
+
         # Controls the rate of spreading
         self.diffusion_coefficient = diffusion_coefficient  
         self.airing_efficiency = airing_efficiency
         self.airing_duration = airing_duration
         # Initialize the concentration grid
-        self.concentration = np.zeros((grid_size, grid_size))
+        self.concentration = np.zeros(self.grid_size)
 
     def update_concentration(self):
         new_concentration = self.concentration.copy()
-        for i in range(1, self.grid_size-1):
-            for j in range(1, self.grid_size-1):
+        for i in range(1, self.grid_size[0]-1):
+            for j in range(1, self.grid_size[1]-1):
                 # Apply the diffusion equation (discrete Laplacian)
                 new_concentration[i, j] = (
                     self.concentration[i, j] + 
@@ -31,9 +50,10 @@ class Classroom:
                         self.concentration[i, j+1] + 
                         self.concentration[i, j-1] - 
                         4 * self.concentration[i, j]
-                    )
+                    ) * dt / self.time_unit
                 )
         self.concentration = new_concentration
+
 
     def air_the_room(self, duration):
         self.concentration[:,:] = self.concentration.mean() * np.exp(-duration * self.airing_efficiency)
@@ -42,29 +62,44 @@ class Classroom:
         # updates table assignment randomly or by a mapping
         ...
 
-    def step(self, time):
+    def step(self, dt: timedelta):
+        self.time += dt
+
         # combines methods for one timestep
         self.update_concentration()
 
-        if time.time() == dt.time(hour=12):
-            self.air_the_room(self.airing_duration)
+        # if self.time.time() == time(hour=12):
+        #     self.air_the_room(self.airing_duration)
 
 class Pupil:
-    def __init__(self, name, emission_rate=0.2):
+    def __init__(self, name:str, table:int=None, virus_concentration:float=0.0, 
+                 emission_rate=0.2):
         self.name = name
+        self.table = table
 
         # parameters
         self.sick_threshold = None
-        self.emission_rate = emission_rate
+        self.emission_rate_constant = emission_rate
+        self.viral_growth_rate_constant = 0.01
+        self.antibody_growth_rate_constant = 0.02
+        self.antibody_decay_rate_constant = 0.002
+        self.viral_decay_rate_constant = 0.001
+        self.viral_uptake_rate_constant = 0.1
 
         # state variables (zustandsvariablen)
         self.is_in_classroom = False
         self.position = None
-        self.virus_concentration = 1000
+        if np.isnan(virus_concentration):
+            self.virus_concentration = 0.0
+        else:
+            self.virus_concentration = virus_concentration
         self.antibody_concentration = 0.00001
 
+    def __repr__(self):
+        return f"{self.name.capitalize()}(tisch={self.table})"
+
     def go_to_school(self, classroom: Classroom):
-        self.position = classroom.table_assignment.get(self.name, None)
+        self.position = np.where(classroom.table_assignment == self.table)
         rng = classroom.rng
 
         if self.position is None:
@@ -78,34 +113,60 @@ class Pupil:
         self.position = None
         self.is_in_classroom = False
 
-    def infection_dynamic(self, classroom):
-        pass
+    def infection_dynamic(self, classroom, dt):
+        if self.is_in_classroom:
+            Cv_env = classroom.concentration[*self.position].mean()
+        else:
+            Cv_env = 0.0
+        
+        Cv_dt = (
+            self.virus_concentration * self.viral_growth_rate_constant -
+            self.virus_concentration * self.viral_decay_rate_constant +
+            Cv_env * self.viral_uptake_rate_constant
+        )
+
+        Ca_dt = (
+            self.virus_concentration * self.antibody_growth_rate_constant -
+            self.antibody_concentration * self.antibody_decay_rate_constant
+        )
+        
+        self.virus_concentration += Cv_dt * dt / classroom.time_unit
+        self.antibody_concentration += Ca_dt * dt / classroom.time_unit
 
     def emit_virus(self, classroom: Classroom):
         if self.is_in_classroom:
             classroom.concentration[*self.position] += (
-                self.virus_concentration * self.emission_rate)
+                self.virus_concentration * self.emission_rate_constant *
+                dt / classroom.time_unit
+            )
 
-    def step(self, classroom, time):
+    def step(self, classroom, dt):
         # incorporate different behavior depending on time
         # Weekday, time of day, ...
-        if time.time() == dt.time(hour=8):
+        if classroom.time.time() == time(hour=8):
             self.go_to_school(classroom)
 
-        if time.time() == dt.time(hour=14):
+        if classroom.time.time() == time(hour=14):
             self.go_home()
 
         self.emit_virus(classroom)
+        self.infection_dynamic(classroom, dt)
 
 
 # initialize simulations
-t0 = dt.datetime(year=2024, month=5, day=15, hour=8)
-time = [t0 + dt.timedelta(minutes=10*x) for x in range(24 * 7 * 4 * 6)]
-room = Classroom()
+t = datetime(year=2024, month=5, day=15, hour=7)
+dt = timedelta(minutes=10)
+t_end = t + timedelta(weeks=4)
+
+classroom_map = pd.read_excel("data/classroom.xlsx", sheet_name="U-shape", 
+                              index_col=0)
+pupil_list = pd.read_excel("data/namelist.xlsx", sheet_name="Klasse-1a")
+room = Classroom(room_map=classroom_map)
+room.time = t
 
 pupils = []
-for name in ["Agnes", "Tiffi", "Ben", "Peter", "Jim", "Samantha"]:
-    pupil = Pupil(name)
+for _, row in pupil_list.iterrows():
+    pupil = Pupil(name=row.Name, table=row.Table, virus_concentration=row.Virenlast)
     pupils.append(pupil)
 
 # make sure all concentration is going to zero 
@@ -118,20 +179,21 @@ fig, ax = plt.subplots()
 room.concentration[0,0] = 100
 cax = ax.matshow(room.concentration, cmap='cool')
 room.concentration[0,0] = 0
+draw_boxes(ax=ax, clusters=room.table_boxes)
 
 fig.colorbar(cax)
 ax.set_title("Virus Concentration")
 
 
-for t in time:
-    room.step(time=t)
+while t < t_end:
+    room.step(dt=dt)
 
     for pupil in pupils:
-        pupil.step(classroom=room, time=t)
+        pupil.step(classroom=room, dt=dt)
 
     if t.time().minute == 0:
         cax.set_data(room.concentration)
-        ax.set_title(f"Time Step: {t}")
+        ax.set_title(f"Time Step: {room.time}")
         plt.pause(0.001)
 
 plt.ioff()
