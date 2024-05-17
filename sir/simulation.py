@@ -61,9 +61,6 @@ class Classroom:
     def air_the_room(self, duration):
         self.concentration[:,:] = self.concentration.mean() * np.exp(-duration * self.airing_efficiency)
 
-    def assign_tables_to_pupils(self, assignment=None):
-        # updates table assignment randomly or by a mapping
-        ...
 
     def step(self, dt: timedelta):
         self.time += dt
@@ -71,8 +68,9 @@ class Classroom:
         # combines methods for one timestep
         self.update_concentration()
 
-        # if self.time.time() == time(hour=12):
-        #     self.air_the_room(self.airing_duration)
+        if self.time.time() == time(hour=12):
+            self.air_the_room(self.airing_duration)
+
 
 class Pupil:
     def __init__(self, name:str, table:int=None, virus_concentration:float=0.0, 
@@ -81,7 +79,7 @@ class Pupil:
         self.table = table
 
         # parameters
-        self.sick_threshold = None
+        self.sick_threshold = 1000
         self.emission_rate_constant = emission_rate
         self.viral_growth_rate_constant = 0.1
         self.antibody_growth_rate_constant = 0.0002
@@ -115,6 +113,10 @@ class Pupil:
     def go_home(self):
         self.position = None
         self.is_in_classroom = False
+
+    def call_in_sick(self):
+        if self.virus_concentration > self.sick_threshold:
+            self.go_home()
 
     def infection_dynamic(self, classroom, dt):
         if self.is_in_classroom:
@@ -154,12 +156,12 @@ class Pupil:
 
         self.emit_virus(classroom)
         self.infection_dynamic(classroom, dt)
-
+        self.call_in_sick()
 
 # initialize simulations
 t = datetime(year=2024, month=5, day=15, hour=7)
-dt = timedelta(minutes=20)
-t_end = t + timedelta(weeks=4)
+dt = timedelta(minutes=5)
+t_end = t + timedelta(weeks=2)
 
 classroom_map = pd.read_excel("data/classroom.xlsx", sheet_name="U-shape", 
                               index_col=0)
@@ -178,9 +180,12 @@ room.air_the_room(duration=np.inf)
 # run the simulation over all timesteps
 # add progress-bar
 plt.ion()
-fig, ax = plt.subplots()
+fig, (ax, ax_graph) = plt.subplots(2, 1, figsize=(10, 14))
 room.concentration[0,0] = 100
 cax = ax.matshow(room.concentration, cmap='cool')
+
+# plot to track the developemnt of infection over time.
+
 room.concentration[0,0] = 0
 draw_boxes(ax=ax, clusters=room.table_boxes)
 
@@ -200,4 +205,4 @@ while room.time < t_end:
 
 plt.ioff()
 plt.show()
-    # add plot for visualization and use make a gif at the  end
+# add plot for visualization and use make a gif at the  end
