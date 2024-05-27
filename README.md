@@ -56,3 +56,22 @@ Wie könnte die Modelldynamik aussehen
 
 2. räumliche ausbreitung der Erreger modellieren
     - Agenten werte zuweisen (Viruslast)
+
+
+## Next steps:
+
+- [ ] Wochenende einbauen + parameter justieren
+- [ ] 2. Schwellwert ich fühle mich nicht gut.
+- [ ] Infektionparameter aus verteilung ziehen (wachstumsrate antikörper individuell)
+- [x] minimalistische version für den workshop
+- [ ] Simulation pause/play button
+
+- [ ] Kurven für infektionsdynamik dynamisch plotten
+- [ ] Boxen ausgrauen wenn schüler zuhause bleiben
+- [ ] Namen in Zellen schreiben
+
+- [ ] Regeln einbauen die wir uns überlegt haben
+- [ ] Schwellwert bleibt fix und kann als scenario variiert werden
+- [ ] Alternierende Tage mit Leuten die in die Schule
+- [ ] Weitere sitzscenarien
+- [ ] Positionswechsel (das sollte hervorgehoben werden)
