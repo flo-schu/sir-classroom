@@ -51,11 +51,11 @@ t_end = t + timedelta(weeks=2)
 
 # initialize classroom
 classroom_map = pd.read_excel("data/classroom.xlsx", sheet_name="U-shape", index_col=0)
-pupil_list = pd.read_excel("data/namelist.xlsx", sheet_name="Klasse-1a")
-room = Classroom(room_map=classroom_map)
+room = Klasse10a(room_map=classroom_map)
 room.time = t
 
 # initialize pupils
+pupil_list = pd.read_excel("data/namelist.xlsx", sheet_name="Klasse-1a")
 pupils = []
 for _, row in pupil_list.iterrows():
     pupil = Pupil(name=row.Name, table=row.Table, virus_concentration=row.Virenlast)
