@@ -1,5 +1,7 @@
 from datetime import time
 import numpy as np
+from scipy.stats import truncnorm, lognorm
+from matplotlib import pyplot as plt
 from classroom import Classroom
 
 class Person:
@@ -12,10 +14,18 @@ class Person:
         self.stayhome_threshold = np.inf
         self.emission_rate_constant = 0.2
         self.viral_growth_rate_constant = 0.1
-        self.antibody_growth_rate_constant = 0.0002
         self.antibody_decay_rate_constant = 0.00002
         self.viral_uptake_rate_constant = 0.1
         self.immune_defense_rate_constant = 0.01
+        
+        # create distribution and draw from it
+        self.mean_antibody_growth_rate_constant = 0.0002
+        self.sigma_antibody_growth_rate_constant = 0.3
+        self.dist_antibody_growth_rate_constant = self.lognorm_dist(
+            mean=self.mean_antibody_growth_rate_constant,
+            scale=self.sigma_antibody_growth_rate_constant
+        )
+        self.antibody_growth_rate_constant = float(self.dist_antibody_growth_rate_constant.rvs(1))
 
         # state variables (zustandsvariablen)
         self.is_in_classroom = False
@@ -91,3 +101,26 @@ class Person:
         self.emit_virus(classroom, dt)
         self.infection_dynamic(classroom, dt)
         self.call_in_sick()
+
+    def truncnorm_dist(self, mean, sigma):
+        # create a truncated distribution, clipped at zero
+        return truncnorm(
+            a=(0-mean) / sigma, 
+            b=np.inf,
+            loc=mean,
+            scale=sigma,
+        )
+
+    def lognorm_dist(self, mean, scale):
+        return lognorm(scale=mean, s=scale)
+
+    def plot_antibody_growthrate_constant_distribution(self):
+        x = np.linspace(
+            0,
+            self.dist_antibody_growth_rate_constant.ppf(0.9999),
+            1000
+        )
+        pdf = self.dist_antibody_growth_rate_constant.pdf(x)
+
+        plt.plot(x, pdf)
+        plt.xlabel("Antibody growth rate")
