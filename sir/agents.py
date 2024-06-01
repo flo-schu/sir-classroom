@@ -48,6 +48,10 @@ class Person:
         if self.virus_concentration > self.sick_threshold:
             self.go_home()
 
+    def stay_at_home(self):
+        if self.virus_concentration > self.stayhome_threshold:
+            self.go_home()
+
     def infection_dynamic(self, classroom, dt):
         if self.is_in_classroom:
             Cv_env = classroom.concentration[*self.position].mean()
