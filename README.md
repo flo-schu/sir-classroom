@@ -60,11 +60,11 @@ Wie könnte die Modelldynamik aussehen
 
 ## Next steps:
 
-- [ ] Wochenende einbauen + parameter justieren
-- [ ] 2. Schwellwert ich fühle mich nicht gut.
-- [ ] Infektionparameter aus verteilung ziehen (wachstumsrate antikörper individuell)
+- [x] Wochenende einbauen + parameter justieren
 - [x] minimalistische version für den workshop
-- [ ] Simulation pause/play button
+- [x] 2. Schwellwert ich fühle mich nicht gut.
+- [x] Infektionparameter aus verteilung ziehen (wachstumsrate antikörper individuell)
+- [x] Simulation pause/play button
 
 - [ ] Kurven für infektionsdynamik dynamisch plotten
 - [ ] Boxen ausgrauen wenn schüler zuhause bleiben
@@ -75,3 +75,22 @@ Wie könnte die Modelldynamik aussehen
 - [ ] Alternierende Tage mit Leuten die in die Schule
 - [ ] Weitere sitzscenarien
 - [ ] Positionswechsel (das sollte hervorgehoben werden)
+
+## Implementierte Maßnahmen
+
+### 2. Schwellwert 
+
+Benötigt einen 2. Schwellwert. Der Sick-threshold ist standardmäßig bei 1000.
+Der 2. Schwellwert `stayhome_threshold` sollte kleiner sein als der standard
+threshold.
+
+```py
+class Pupil(Student):
+    stayhome_threshold = 500
+
+    def step(self, ...):
+        ...
+        self.stay_at_home()
+        ...
+```
+
