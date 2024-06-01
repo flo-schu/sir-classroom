@@ -3,14 +3,14 @@ import numpy as np
 from classroom import Classroom
 
 class Person:
-    def __init__(self, name:str, table:int=None, virus_concentration:float=0.0, 
-                 emission_rate=0.2):
+    def __init__(self, name:str, table:int=None, virus_concentration:float=0.0):
         self.name = name
         self.table = table
 
         # parameters
         self.sick_threshold = 1000
-        self.emission_rate_constant = emission_rate
+        self.stayhome_threshold = np.inf
+        self.emission_rate_constant = 0.2
         self.viral_growth_rate_constant = 0.1
         self.antibody_growth_rate_constant = 0.0002
         self.antibody_decay_rate_constant = 0.00002
