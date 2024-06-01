@@ -28,8 +28,7 @@ def run(iteration, room, pupils, t_end, dt):
         )
 
         cax.set_data(room.concentration)
-        ax.set_title(f"Time Step: {room.time}")
-        plt.pause(0.001)
+        ax.set_title(f"Zeit: {room.daymap[room.time.isoweekday()]}, {room.time}")
 
     
     fig.colorbar(cax)

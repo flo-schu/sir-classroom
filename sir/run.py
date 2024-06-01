@@ -20,10 +20,13 @@ class Klasse10a(Classroom):
             self.air_the_room(self.airing_duration)
 
 class Pupil(Person):
-    def step(self, classroom, dt):
+    # parameters
+    sick_threshold = 1000
+
+    def step(self, classroom: Classroom, dt: timedelta):
         # incorporate different behavior depending on time
         # Weekday, time of day, ...
-        if classroom.time.time() == time(hour=8):
+        if classroom.time.time() == time(hour=8) and classroom.is_weekday:
             self.go_to_school(classroom)
 
         if classroom.time.time() == time(hour=14):
@@ -46,7 +49,7 @@ def iteration(room, pupils, dt):
 
 # initialize time
 t = datetime(year=2024, month=5, day=15, hour=7)
-dt = timedelta(minutes=5)
+dt = timedelta(minutes=30)
 t_end = t + timedelta(weeks=2)
 
 # initialize classroom

@@ -9,6 +9,8 @@ class Classroom:
     pupils = []
     time: datetime = datetime(year=2024, month=1, day=1, hour=0, minute=0)
     time_unit = timedelta(hours=1)
+    daymap = {1: "Montag", 2: "Dienstag", 3: "Mittwoch", 4: "Donnerstag", 
+              5: "Freitag", 6: "Samstag", 7: "Sonntag"}
 
     def __init__(
         self, 
@@ -59,6 +61,9 @@ class Classroom:
     def air_the_room(self, duration):
         self.concentration[:,:] = self.concentration.mean() * np.exp(-duration * self.airing_efficiency)
 
+    @property
+    def is_weekday(self):
+        return not self.time.isoweekday() in (6, 7)
 
     def step(self, dt: timedelta):
         self.time += dt
