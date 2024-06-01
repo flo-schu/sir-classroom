@@ -17,7 +17,7 @@ class Classroom:
         room_map=None,
         grid_size=(30, 30), 
         seed=1, 
-        diffusion_coefficient=0.7, 
+        diffusion_coefficient=0.5, 
         airing_efficiency=0.2,
         airing_duration=10
     ):
