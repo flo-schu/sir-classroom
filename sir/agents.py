@@ -14,7 +14,7 @@ class Person:
         self.stayhome_threshold = np.inf
         self.emission_rate_constant = 0.2
         self.viral_growth_rate_constant = 0.1
-        self.antibody_decay_rate_constant = 0.00002
+        self.antibody_decay_rate_constant = 0.005
         self.viral_uptake_rate_constant = 0.1
         self.immune_defense_rate_constant = 0.01
         
