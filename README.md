@@ -66,11 +66,15 @@ Wie könnte die Modelldynamik aussehen
 - [x] Infektionparameter aus verteilung ziehen (wachstumsrate antikörper individuell)
 - [x] Simulation pause/play button
 
-- [ ] Kurven für infektionsdynamik dynamisch plotten
-- [ ] Boxen ausgrauen wenn schüler zuhause bleiben
-- [ ] Namen in Zellen schreiben
+- [x] Kurven für infektionsdynamik dynamisch plotten#
+- [x] Boxen ausgrauen wenn schüler zuhause bleiben
+- [x] Namen in Zellen schreiben
+- [ ] Parameter schieben, sodass auch die Initiale ansteckung von einem Schüler Plausibel ist. 
+- [x] Geringer schwellwert für ansteckung 
+- [x] Random clustering of students in break-time
+- [ ] select students with bars by name
 
-- [ ] Regeln einbauen die wir uns überlegt haben
+- Regeln einbauen die wir uns überlegt haben
 - [ ] Schwellwert bleibt fix und kann als scenario variiert werden
 - [ ] Alternierende Tage mit Leuten die in die Schule
 - [ ] Weitere sitzscenarien

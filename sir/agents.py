@@ -11,11 +11,12 @@ class Person:
 
         # parameters
         self.sick_threshold = 1000
-        self.stayhome_threshold = np.inf
+        self.symptoms_threshold = np.inf
         self.emission_rate_constant = 0.2
         self.viral_growth_rate_constant = 0.1
         self.antibody_decay_rate_constant = 0.005
         self.viral_uptake_rate_constant = 0.1
+        self.viral_uptake_threshold = 0.5
         self.immune_defense_rate_constant = 0.01
         
         # create distribution and draw from it
@@ -39,6 +40,10 @@ class Person:
     def __repr__(self):
         return f"{self.name.capitalize()}(tisch={self.table})"
 
+    def get_table_location(self, classrom: Classroom, x_offset=0, y_offset=0):
+        y, x = np.where(classrom.table_assignment == self.table)
+        return (x.mean() + x_offset, y.mean() + y_offset)
+
     def go_to_school(self, classroom: Classroom):
         self.position = np.where(classroom.table_assignment == self.table)
         rng = classroom.rng
@@ -49,18 +54,21 @@ class Person:
             self.position = (xposition, yposition)
         
         self.is_in_classroom = True
+        classroom.table_patches[self.table].set_facecolor("white")
 
-    def go_home(self):
+    def go_home(self, classroom):
         self.position = None
         self.is_in_classroom = False
+        classroom.table_patches[self.table].set_facecolor("none")
 
-    def call_in_sick(self):
-        if self.virus_concentration > self.sick_threshold:
-            self.go_home()
 
-    def stay_at_home(self):
-        if self.virus_concentration > self.stayhome_threshold:
-            self.go_home()
+    def call_in_sick(self, classroom):
+        if self.is_sick:
+            self.go_home(classroom)
+
+    def stay_at_home(self, classroom):
+        if self.shows_symptoms:
+            self.go_home(classroom)
 
     def infection_dynamic(self, classroom, dt):
         if self.is_in_classroom:
@@ -70,7 +78,7 @@ class Person:
         
         Cv_dt = (
             self.virus_concentration * self.viral_growth_rate_constant +
-            Cv_env * self.viral_uptake_rate_constant -
+            np.max([Cv_env - self.viral_uptake_threshold, 0]) * self.viral_uptake_rate_constant -
             self.virus_concentration * self.antibody_concentration * self.immune_defense_rate_constant
         )
 
@@ -82,6 +90,17 @@ class Person:
         self.virus_concentration += Cv_dt * dt / classroom.time_unit
         self.antibody_concentration += Ca_dt * dt / classroom.time_unit
 
+        if self.virus_concentration > self.sick_threshold:
+            self.is_sick = True
+        else:
+            self.is_sick = False
+
+        if self.virus_concentration > self.symptoms_threshold:
+            self.shows_symptoms = True
+        else:
+            self.shows_symptoms = False
+
+
     def emit_virus(self, classroom: Classroom, dt):
         if self.is_in_classroom:
             classroom.concentration[*self.position] += (
@@ -92,15 +111,15 @@ class Person:
     def step(self, classroom, dt):
         # incorporate different behavior depending on time
         # Weekday, time of day, ...
-        if classroom.time.time() == time(hour=8):
+        if classroom.time.time() == time(hour=8) and classroom.is_weekday and not self.is_sick:
             self.go_to_school(classroom)
 
         if classroom.time.time() == time(hour=14):
-            self.go_home()
+            self.go_home(classroom)
 
         self.emit_virus(classroom, dt)
         self.infection_dynamic(classroom, dt)
-        self.call_in_sick()
+        self.call_in_sick(classroom)
 
     def truncnorm_dist(self, mean, sigma):
         # create a truncated distribution, clipped at zero

@@ -7,8 +7,6 @@ from matplotlib.widgets import Slider
 from classroom import Classroom
 from agents import Person
 
-from boxes import draw_boxes
-
 class PlayPause:
     long_pause = True
 
@@ -95,7 +93,9 @@ def run(
     # plot to track the developemnt of infection over time.
 
     room.concentration[0,0] = 0
-    draw_boxes(ax=ax, clusters=room.table_boxes)
+    room.draw_boxes(ax=ax)
+    _ = [ax.text(*p.get_table_location(room, y_offset=2), p.name, ha="center") for p in pupils]
+
 
     virus_load_agents = []
     time_traj = []
@@ -138,9 +138,9 @@ def run(
 def iteration(room, pupils, dt):
     room.step(dt=dt)
 
-    for pupil in pupils:
+    for pupil in pupils:    
         pupil.step(classroom=room, dt=dt)
-
+    
 
 def calc_viral_load(agents: List[Person]):
     return np.mean([a.virus_concentration for a in agents])
