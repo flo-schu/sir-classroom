@@ -27,8 +27,13 @@ class Pupil(Person):
     def step(self, classroom: Classroom, dt: timedelta):
         # incorporate different behavior depending on time
         # Weekday, time of day, ...
-        if classroom.time.time() == time(hour=8) and classroom.is_weekday and not self.is_sick:
-            self.go_to_school(classroom)
+        if classroom.time.time() == time(hour=8):
+            if not self.is_sick:
+                if classroom.is_weekday:
+                    self.go_to_school(classroom)
+            else:
+                classroom.sick_days += 1
+
 
         if classroom.time.time() == time(hour=14):
             self.go_home(classroom)
@@ -56,8 +61,8 @@ def iteration(room, pupils, dt):
 
 # initialize time
 t = datetime(year=2024, month=6, day=10, hour=7)
-dt = timedelta(minutes=15)
-t_end = t + timedelta(weeks=3)
+dt = timedelta(minutes=30)
+t_end = t + timedelta(weeks=4)
 
 # initialize classroom
 classroom_map = pd.read_excel("data/classroom.xlsx", sheet_name="U-shape", index_col=0)

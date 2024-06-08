@@ -45,11 +45,13 @@ def run(
     ax_graph = fig.add_subplot(G[3, :])
     ax_bars = fig.add_subplot(G[4, :])
 
-    # ax.set_xticklabels([])
-    # ax.set_yticklabels([])
-    # ax.set_xticks([])
-    # ax.set_yticks([])
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.set_xticks([])
+    ax.set_yticks([])
     ax.set_title(f"Zeit: {room.daymap[room.time.isoweekday()]}, {room.time}")
+
+    sick_days = ax.text(0, 1, s=f"Kranktage: {room.sick_days}")
 
     room.concentration[0,0] = 100
     cax = ax.matshow(room.concentration, cmap='cool')
@@ -66,21 +68,22 @@ def run(
     fig.tight_layout()
 
     # set up bar plot
-    n = 5
+    n = 34
     pupil_selection = pupils[slice(n)]
     virus_concs_sel = [p.virus_concentration for p in pupil_selection]
     antib_concs_sel = [p.antibody_concentration * 100 for p in pupil_selection]
     virus_bars = ax_bars.bar(
         x=np.arange(n) - 0.2, 
         height=virus_concs_sel, 
-        width=2/n
+        width=8/n
     )
 
     antib_bars = ax_bars.bar(
         x=np.arange(n) + 0.2, 
         height=antib_concs_sel, 
-        width=2/n
+        width=8/n
     )
+    ax_bars.set_yscale("log")
     max_bars = np.max(virus_concs_sel + antib_concs_sel)
     # add interactive slider
     callback = Playspeed()
@@ -110,6 +113,7 @@ def run(
             dt=dt
         )
 
+        sick_days.set_text(f"Kranktage: {room.sick_days}")
         agent_viral_conc = calc_viral_load(agents=pupils)
 
         virus_load_agents.append(agent_viral_conc)

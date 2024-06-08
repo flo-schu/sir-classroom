@@ -39,6 +39,7 @@ class Classroom:
         self.airing_duration = airing_duration
         # Initialize the concentration grid
         self.concentration = np.zeros(self.grid_size)
+        self.sick_days = 0
 
     def update_concentration(self, dt):
         new_concentration = self.concentration.copy()
@@ -85,7 +86,7 @@ class Classroom:
     def draw_movers(self):
         self.moving = np.random.choice(
             np.unique(list(self.table_names.keys())), 
-            size=5
+            size=10
         )
 
     def draw_box(self, ax, box):
