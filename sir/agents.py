@@ -31,6 +31,9 @@ class Person:
         # state variables (zustandsvariablen)
         self.is_in_classroom = False
         self.position = None
+        self.old_position = None
+        self.moved_at_time = None
+
         if np.isnan(virus_concentration):
             self.virus_concentration = 0.0
         else:
@@ -61,6 +64,8 @@ class Person:
         self.is_in_classroom = False
         classroom.table_patches[self.table].set_facecolor("none")
 
+    def will_move(self, classroom):
+        return self.table in classroom.moving
 
     def call_in_sick(self, classroom):
         if self.is_sick:
@@ -107,6 +112,57 @@ class Person:
                 self.virus_concentration * self.emission_rate_constant *
                 dt / classroom.time_unit
             )
+
+    def find_free_spot(self, classroom):
+        tables = list(set(classroom.table_patches.keys()).difference([self.table]))
+        table_to_visit = np.random.choice(tables, 1)[0]
+        x, y, h, w = classroom.table_boxes[table_to_visit]
+
+        x_range = np.arange(x - w, x + w * 2)
+        y_range = np.arange(y - h, y + h * 2)
+
+        surrounding = np.isnan(classroom.table_assignment[np.ix_(x_range, y_range)])
+        surrounding = ~np.diff(surrounding, append=True, axis=0) * surrounding
+        surrounding = ~np.diff(surrounding, append=True, axis=1) * surrounding
+        surrounding[-1, :] = False
+        surrounding[:, -1] = False
+
+        x_possible, y_possible = np.where(surrounding)
+        x_new_pos = np.random.choice(x_possible + x - w)
+        y_new_pos = np.random.choice(y_possible + y - h)
+
+        new_position = (
+            np.repeat(np.arange(x_new_pos, x_new_pos+w), 2),
+            np.tile(np.arange(y_new_pos, y_new_pos+h), 2)
+        )
+
+        return new_position
+
+
+    def move(self, classroom: Classroom):
+        if self.is_in_classroom and self.will_move(classroom):
+            self.old_position = self.position
+            self.position = self.find_free_spot(classroom)
+
+            tp = classroom.table_patches[self.table]
+            tp.set_xy(reversed([x.min() - 0.5 for x in self.position]))
+            tp.set_edgecolor("red") 
+
+            txt = classroom.table_names[self.table]
+            txt.set_y(self.position[0].mean() +1.5)
+            txt.set_x(self.position[1].mean())
+
+    def move_back(self, classroom: Classroom):
+        if self.is_in_classroom and self.will_move(classroom):
+            self.position = self.old_position
+
+            tp = classroom.table_patches[self.table]
+            tp.set_xy(reversed([x.min()-0.5 for x in self.position]))
+            tp.set_edgecolor("black")
+
+            txt = classroom.table_names[self.table]
+            txt.set_x(self.position[1].mean())
+            txt.set_y(self.position[0].mean() + 2)
 
     def step(self, classroom, dt):
         # incorporate different behavior depending on time

@@ -45,10 +45,10 @@ def run(
     ax_graph = fig.add_subplot(G[3, :])
     ax_bars = fig.add_subplot(G[4, :])
 
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    ax.set_xticks([])
-    ax.set_yticks([])
+    # ax.set_xticklabels([])
+    # ax.set_yticklabels([])
+    # ax.set_xticks([])
+    # ax.set_yticks([])
     ax.set_title(f"Zeit: {room.daymap[room.time.isoweekday()]}, {room.time}")
 
     room.concentration[0,0] = 100
@@ -94,7 +94,10 @@ def run(
 
     room.concentration[0,0] = 0
     room.draw_boxes(ax=ax)
-    _ = [ax.text(*p.get_table_location(room, y_offset=2), p.name, ha="center") for p in pupils]
+    room.table_names = {
+        p.table: ax.text(*p.get_table_location(room, y_offset=2), p.name, ha="center") 
+        for p in pupils
+    }
 
 
     virus_load_agents = []

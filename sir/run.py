@@ -16,8 +16,9 @@ class Klasse10a(Classroom):
         # combines methods for one timestep
         self.update_concentration(dt=dt)
 
-        if self.time.time() == time(hour=12):
+        if self.time.time() == time(hour=11):
             self.air_the_room(self.airing_duration)
+            self.draw_movers()
 
 class Pupil(Person):
     # parameters
@@ -31,6 +32,12 @@ class Pupil(Person):
 
         if classroom.time.time() == time(hour=14):
             self.go_home(classroom)
+
+        if classroom.time.time() == time(hour=11):
+            self.move(classroom)
+
+        if classroom.time.time() == time(hour=12):
+            self.move_back(classroom)
 
         self.emit_virus(classroom, dt)
         self.infection_dynamic(classroom, dt)

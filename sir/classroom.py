@@ -29,6 +29,8 @@ class Classroom:
             self.grid_size = room_map.values.shape
             self.table_boxes = find_clusters(self.table_assignment)
 
+        self.table_names = {}
+
         # Controls the rate of spreading
         self.diffusion_coefficient = diffusion_coefficient  
         self.decay_rate_constant = 0.05
@@ -72,13 +74,28 @@ class Classroom:
 
         if self.time.time() == time(hour=12):
             self.air_the_room(self.airing_duration)
+            self.draw_movers()
 
     def draw_boxes(self, ax):
         self.table_patches = {}
-        for table, (x, y, width, height) in self.table_boxes.items():
-            rect = patches.Rectangle((y-0.5, x-0.5), width, height, linewidth=1, edgecolor='black', facecolor='none')
-            ax.add_patch(rect)
+        for table, box in self.table_boxes.items():
+            rect = self.draw_box(ax, box)
             self.table_patches.update({table: rect})
+
+    def draw_movers(self):
+        self.moving = np.random.choice(
+            np.unique(list(self.table_names.keys())), 
+            size=5
+        )
+
+    def draw_box(self, ax, box):
+        x, y, width, height = box
+        rect = patches.Rectangle(
+            (y-0.5, x-0.5), width, height, linewidth=1, 
+            edgecolor='black', facecolor='none'
+        )
+        ax.add_patch(rect)
+        return rect
 
 
 def find_clusters(arr):
